@@ -132,7 +132,7 @@ $(document).ready(function () {
 <li>ECASS 3: Favorable outcome in 52% vs 45%.</li>
 <li>Pooled data/meta-analysis: Favorable outcome in 35% vs 30%</li>
 </ul>
-<p>At 4.5 hours:</p>
+<p>After 4.5 hours:</p>
 <ul>
 <li>Pooled data/meta-analysis: Favorable outcome in 33% vs 31%</li>
 </ul>
@@ -142,13 +142,13 @@ $(document).ready(function () {
 <li>Cohort B (post-2009, 4.5 hour threshold): 36.3% got tPA before threshold vs 13.0% after threshold</li>
 <li>Cohort C (post-2009, 3 hour threshold): 87.4% got tPA before threshold vs 73.0% after threshold</li>
 </ul>
-<pre class="r"><code>effect_size &lt;- 0.07
-compliance &lt;- 0.395 # compliance = 0.665 - 0.27
+<pre class="r"><code>effect_size &lt;- 0.07 # effect size = 0.52 - 0.45, from ECASS 3
+compliance &lt;- 0.395 # compliance = 0.665 - 0.27, from Cohort A
 effect_size_actual &lt;- effect_size*compliance
 
-design_effect &lt;- 4.0
-alpha &lt;- 0.05
-power &lt;- 0.8
+design_effect &lt;- 4.0 # typical design effect from RDD
+alpha &lt;- 0.05 # standard value
+power &lt;- 0.8 # standard value
 
 power_calc &lt;- pwr.2p.test(h = effect_size_actual, sig.level = alpha, power = power)
 n &lt;- power_calc$n*design_effect

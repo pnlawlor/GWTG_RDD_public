@@ -1,0 +1,166 @@
+---
+title: "Simulate data"
+output: html_document
+---
+
+```{r,echo=FALSE}
+# Set the directory where you installed the files
+#working_dir <- "C:\\Users\\pnlawlor\\GoogleDrive\\Research\\Projects\\GWTG_RDD\\"
+#setwd(working_dir)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Simulation data 1: Sharp RDD
+
+Here we will simulate the setting in which there is a simple causal effect of tPA administration on clinical outcome. In this dataset, we will assume that the threshold for tPA administration (3 hours) is always followed, meaning that there should be a sharp discontinuity between outcomes on the left side of the threshold and on the right. 
+
+We will simulate the sorting variable, $x$ (time until hospital presentation), and the outcome (1=good,0=bad). We will model the probability of a good outcome as depending linearly on $x$, with a discontuinty at the threshold for tPA administration (3 hours). 
+
+First, we will simulate the sorting variable, $x$, the time until presentation at the hospital. For the sake of simplicity, these values will be sampled uniformly between the two desired endpoints ($x_{min}$ and $x_{max}$).
+
+![Data simulation schematic: Sharp RDD](C:\\Users\\pnlawlor\\GoogleDrive\\Research\\Projects\\GWTG_RDD\\Figures\\Schematics\\sim1_schematic.png)
+
+```{r}
+n <- 10000 # Number of samples desired
+x_min <- 160 # In minutes
+x_max <- 200
+x <- runif(n = n ,min = x_min, max = x_max)
+```
+
+Define desired values
+
+```{r}
+c <- 180
+p_max <- .8
+p_thresh_left <- .7
+p_thresh_right <- .3
+p_min <- .2
+```
+
+Build linear functions for simulation on the left side of threshold:
+$$ p_{threshL} - p_{max} = m (c - x_{min}) $$
+$$ p_{max} = mx + b $$
+
+```{r}
+# Slope
+m_left <- (p_thresh_left - p_max)/(c - x_min)
+# Intercept
+b_left <- p_max - m_left*x_min
+```
+
+Build linear functions on the right side of the threshold
+$$ p_{min} - p_{threshR} = m(x_{max} - c) $$
+$$ p_{min} = mx + b $$ 
+
+```{r}
+# Slope
+m_right <- (p_min - p_thresh_right)/(x_max - c)
+# Intercept
+b_right <- p_min - m_right*x_max
+```
+
+Simulate the data
+
+```{r}
+y <- rep(0,n)
+p_temp <- rep(0,n)
+
+for(i in 1:n){
+    if (x[i] < c){
+        p_temp[i] <- m_left*x[i] + b_left
+        y[i] <- rbinom(1,1,p_temp[i])
+    } else {
+        p_temp[i] <- m_right*x[i] + b_right
+        y[i] <- rbinom(1,1,p_temp[i])
+    }
+}
+    
+```
+
+### Plot data and functions that generated them
+
+```{r}
+library(ggplot2)
+# Generate data for lines
+x1 <- seq(from=160,to=180,by=.01)
+x2 <- seq(from=180,to=200,by=.01)
+y1 <- m_left*x1 + b_left
+y2 <- m_right*x2 + b_right
+
+# Generate bin means
+bin_size <- 100
+xbin1 <- x[x<180]
+ybin1 <- y[x<180]
+ptemp1 <- p_temp[x<180]
+ptemp1 <- p_temp[order(xbin1)]
+ybin1 <- ybin1[order(xbin1)]
+xbin1 <- xbin1[order(xbin1)]
+num_remove1 <- length(ybin1) %% bin_size
+elements_remove1 <- seq(from=1,to=num_remove1)
+xbin1 <- xbin1[-elements_remove1]
+ybin1 <- ybin1[-elements_remove1]
+
+xbin2 <- x[x>180]
+ybin2 <- y[x>180]
+ptemp2 <- p_temp[x>180]
+ybin2 <- ybin2[order(xbin2)]
+ptemp2 <- ptemp2[order(xbin2)]
+xbin2 <- xbin2[order(xbin2)]
+num_remove2 <- length(ybin2) %% bin_size
+elements_remove2 <- seq(from=1,to=num_remove2)
+xbin2 <- xbin2[-elements_remove2]
+ybin2 <- ybin2[-elements_remove2]
+
+ybin1 <- matrix(ybin1,ncol=bin_size,byrow=TRUE)
+xbin1 <- matrix(xbin1,ncol=bin_size,byrow=TRUE)
+ybin2 <- matrix(ybin2,ncol=bin_size,byrow=TRUE)
+xbin2 <- matrix(xbin2,ncol=bin_size,byrow=TRUE)
+ymeans1 <- rowMeans(ybin1)
+xmeans1 <- rowMeans(xbin1)
+ymeans2 <- rowMeans(ybin2)
+xmeans2 <- rowMeans(xbin2)
+
+  
+df1 <- data.frame(xx=x1,yy=y1) # left line
+df2 <- data.frame(xx=x2,yy=y2) # right line
+df3 <- data.frame(xx=xmeans1,yy=ymeans1)
+df4 <- data.frame(xx=xmeans2,yy=ymeans2)
+
+# Plot
+(plot1 <- ggplot(df1, aes(xx,yy)) + 
+    geom_line(size=1) +
+    geom_line(data = df2,size=1) +
+    geom_point(data=df3) + 
+    geom_point(data=df4) + 
+    xlab("Time to treatment") + 
+    ylab("Good disposition probability") +
+    theme_classic(base_size = 12) +
+    ylim(0,1) + 
+    xlim(160,200)
+)
+```
+
+### Package `rdd`
+
+```{r,echo=TRUE}
+bw_desired = 20 #in minutes
+library(rdd)
+bw <- IKbandwidth(X=x,Y=y,cutpoint=c)
+DCdensity(runvar = x,cutpoint = c)
+rd <- RDestimate(y~x,cutpoint=c,bw = bw_desired)
+plot(rd)
+summary(rd)
+```
+
+### Package `rdrobust`
+
+```{r,echo=TRUE}
+bw_desired = 20 #in minutes
+library(rdrobust)
+rdbwselect(y=y,x=x,c = c,all=TRUE)
+rdrobust(y = y,x = x,c = c, h = bw_desired)
+rdplot(y = y,x = x,c = c,col.lines = "black",type.dots = "open")
+```

@@ -29,13 +29,13 @@ Fuzzy effect in data:
 
 
 ```{r}
-effect_size <- 0.07
-compliance <- 0.395 # compliance = 0.665 - 0.27
+effect_size <- 0.07 # effect size = 0.52 - 0.45, from ECASS 3
+compliance <- 0.395 # compliance = 0.665 - 0.27, from Cohort A
 effect_size_actual <- effect_size*compliance
 
-design_effect <- 4.0
-alpha <- 0.05
-power <- 0.8
+design_effect <- 4.0 # typical design effect from RDD
+alpha <- 0.05 # standard value
+power <- 0.8 # standard value
 
 power_calc <- pwr.2p.test(h = effect_size_actual, sig.level = alpha, power = power)
 n <- power_calc$n*design_effect
