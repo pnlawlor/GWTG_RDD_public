@@ -3,11 +3,6 @@ title: "Simulate data"
 output: html_document
 ---
 
-```{r,echo=FALSE}
-# Set the directory where you installed the files
-#working_dir <- "C:\\Users\\pnlawlor\\GoogleDrive\\Research\\Projects\\GWTG_RDD\\"
-#setwd(working_dir)
-```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -15,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Simulation data 1: Sharp RDD
 
-Here we will simulate the setting in which there is a simple causal effect of tPA administration on clinical outcome. In this dataset, we will assume that the threshold for tPA administration (3 hours) is always followed, meaning that there should be a sharp discontinuity between outcomes on the left side of the threshold and on the right. 
+Here we will simulate the setting in which there is a simple causal effect of tPA administration on clinical outcome. In this dataset, we will assume that the threshold for tPA administration is 3 hours and is always followed, meaning that there should be a sharp discontinuity between outcomes on the left side of the threshold and on the right. 
 
 We will simulate the sorting variable, $x$ (time until hospital presentation), and the outcome (1=good,0=bad). We will model the probability of a good outcome as depending linearly on $x$, with a discontuinty at the threshold for tPA administration (3 hours). 
 
@@ -135,9 +130,13 @@ df4 <- data.frame(xx=xmeans2,yy=ymeans2)
     geom_line(data = df2,size=1) +
     geom_point(data=df3) + 
     geom_point(data=df4) + 
+    ggtitle("Simulated data: expected effect of alteplase on clinical outcome") +
     xlab("Time to treatment") + 
-    ylab("Good disposition probability") +
+    ylab("Good disposition log(odds)") +
     theme_classic(base_size = 12) +
+    theme(axis.ticks.y = element_blank(),
+          axis.text.y = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
     ylim(0,1) + 
     xlim(160,200)
 )
