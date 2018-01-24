@@ -1,7 +1,6 @@
 ---
-title: "Power calculation"
+title: "Power calculation for alteplase RDD"
 author: "Patrick Lawlor"
-date: "12/10/2017"
 output: html_document
 ---
 
@@ -29,17 +28,16 @@ Fuzzy effect in data:
 
 
 ```{r}
-prop1 <- 0.52 # From ECASS 3
-prop2 <- 0.45 # From ECASS 3
+prop1 <- 0.524 # From ECASS 3
+prop2 <- 0.452 # From ECASS 3
 
 compliance <- 0.395 # compliance = 0.665 - 0.27, from Cohort A
 
 effect_size_h <- ES.h(prop1, prop2) # Calculate Cohen's h, based on arcsine transformation
-
 effect_size_actual <- effect_size_h*compliance
 
-
 design_effect <- 4.0 # typical design effect from RDD
+
 alpha <- 0.05 # standard value
 power <- 0.8 # standard value
 
